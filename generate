@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+path = ARGV[0].downcase.split('/').map{|x| x.capitalize}
+filename = path.reverse.first
+path = path.reverse.select.with_index{|_, i| i.positive?}.reverse.join('/') << '/'
+
+puts path
+unless File.directory?("src/Components/#{path}")
+  `mkdir src/Components/#{path}`
+end
+
+File.open("src/Components/#{path + filename}.tsx", "w") { |f| 
+  f.write "import React from \"react\";
+
+const #{filename} = () => {
+  return <div className=\"#{filename}\"></div>
+}
+
+export default #{filename};"
+}
