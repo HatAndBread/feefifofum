@@ -2,24 +2,32 @@ const { app, BrowserWindow, Menu, ipcMain } = require("electron");
 const path = require("path");
 
 const isDev = process.env.NODE_ENV || "development";
-console.log(`Environment: ${isDev ? 'Development' : 'Production'}`)
+console.log(`Environment: ${isDev ? "Development" : "Production"}`);
 
 if (isDev) {
-  require("electron-reload")('./dist', {
+  require("electron-reload")("./", {
     debug: true,
-    watchRenderer: true
+    watchRenderer: true,
   });
 }
+
+const backgroundColor = "#313639";
 
 const htmlFile = (fileName) =>
   path.join(__dirname, "templates", `${fileName}.html`);
 const preload = path.join(__dirname, "preload.js");
+
+const openDevTools = (window) => {
+  if (!isDev) return;
+  window.webContents.openDevTools({ mode: "detach" });
+};
 
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    backgroundColor,
     webPreferences: {
       preload,
     },
@@ -28,28 +36,45 @@ const createWindow = () => {
   // and load the index.html of the app.
   mainWindow.loadFile(htmlFile("index"));
 
-  mainWindow.webContents.openDevTools({ mode: "detach" });
+  openDevTools(mainWindow);
   mainWindow.on("closed", () => {
     app.quit();
   });
+  return mainWindow;
 };
 
 const openNewWindow = (windowName) => {
   const newWindow = new BrowserWindow({
+    backgroundColor,
     webPreferences: {
       preload,
     },
   });
   newWindow.loadFile(htmlFile(windowName));
   newWindow.setTitle(windowName);
-  newWindow.openDevTools(newWindow);
+  openDevTools(newWindow);
+  return newWindow;
 };
 
 app.whenReady().then(() => {
-  createWindow();
-  ipcMain.on("open-window", (event, windowName) => {
+  const mainWindow = createWindow();
+  ipcMain.on("open-window", (_event, windowName) => {
+    const newWindow = openNewWindow(windowName, mainWindow);
+    const id = newWindow.id;
+    newWindow.on("closed", () => {
+      mainWindow.webContents.send("window-closed", {sender: id});
+    });
+    mainWindow.webContents.send("new-instrument", {
+      instrument: windowName,
+      sender: id,
+    });
+  });
+
+  ipcMain.on("tone-message", (event, message) => {
     const webContents = event.sender;
-    openNewWindow(windowName);
+    const win = BrowserWindow.fromWebContents(webContents);
+    message.sender = win.id;
+    mainWindow.webContents.send("tone-message", message);
   });
 
   app.on("activate", () => {

@@ -1,26 +1,38 @@
-import React, { useState, useEffect } from "react";
-// import { AppContext } from "./Context";
+import React from "react";
 import Dashboard from "./Pages/Dashboard";
 import Tannerin from "./Pages/Tannerin";
-// import useGlobals from "./Hooks/use-globals";
+import Keyboard from "./Pages/Keyboard";
+import Sequencer from "./Pages/Sequencer"
+import Instrument from "./Components/Instrument";
+import useTone from "./sound-lib/use-tone";
 
+const page = document.title.toLowerCase();
+
+if (page === "dashboard") useTone();
 export const App = () => {
+
   const getPage = () => {
-    switch (document.title.toLowerCase()) {
+    switch (page) {
       case "dashboard": {
         return <Dashboard />;
       }
       case "tannerin": {
-        return <Tannerin />;
+        return <Instrument><Tannerin /></Instrument>;
+      }
+      case "keyboard": {
+        return <Instrument><Keyboard /></Instrument>;
+      }
+      case "sequencer": {
+        return <Instrument><Sequencer /></Instrument>;
       }
       default: {
-        return <Dashboard />;
+        throw new Error(`React component not implemented for ${page}`);
       }
     }
   };
 
   return (
-    <div className="container">
+    <div className="text-white">
       <div>{getPage()}</div>
     </div>
   );

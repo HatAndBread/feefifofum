@@ -23,7 +23,7 @@
     "typescript": "^4.7.3"
   },
   "scripts": {
-    "start": "eslint&&npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch&&esbuild ./src/Index.tsx --bundle --watch --outfile=./dist/out.js & electron .",
+    "start": "eslint && npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch & esbuild ./src/Index.tsx --loader:.svg=dataurl --loader:.png=dataurl --bundle --watch --outfile=./dist/out.js & electron .",
     "package": "electron-forge package",
     "make": "electron-forge make"
   },
